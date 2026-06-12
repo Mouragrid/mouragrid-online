@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mouragrid | Controle de Horas Online</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #637181;
+      --line: #dde4ec;
+      --brand: #126a72;
+      --brand-strong: #0b4f57;
+      --ok: #1b7f4d;
+      --warn: #a15c00;
+      --danger: #b3261e;
+      --soft: #eef7f6;
+      --shadow: 0 18px 45px rgba(31, 42, 55, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { border: 0; cursor: pointer; background: none; color: inherit; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 284px 1fr;
+    }
+
+    aside {
+      background: #111923;
+      color: #f4f7fa;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 6px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #16a0a7, #d7782f);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+    }
+
+    .brand strong { display: block; font-size: 17px; }
+    .brand span { display: block; color: #aab6c2; font-size: 12px; }
+
+    nav { display: grid; gap: 8px; }
+
+    .nav-button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      color: #c9d3dd;
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    .nav-button.active,
+    .nav-button:hover {
+      background: rgba(255,255,255,0.09);
+      color: #ffffff;
+    }
+
+    .side-summary {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      color: #dce5ec;
+    }
+
+    .side-summary span {
+      display: block;
+      color: #9fb0bd;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    main { min-width: 0; padding: 28px; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.1;
+    }
+
+    .subtitle { margin: 7px 0 0; color: var(--muted); max-width: 760px; }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 9px 13px;
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+      white-space: nowrap;
+    }
+
+    .btn.primary { background: var(--brand); color: white; border-color: var(--brand); }
+    .btn.primary:hover { background: var(--brand-strong); }
+    .btn.icon { width: 38px; padding: 0; }
+
+    .sync-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eaf3f3;
+      color: #245b61;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+    }
+
+    .sync-pill.error { background: #fdecea; color: var(--danger); }
+    .sync-pill.error .sync-dot { background: var(--danger); }
+
+    .grid { display: grid; gap: 16px; }
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 18px; }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat span { color: var(--muted); font-size: 13px; }
+    .stat strong { display: block; margin-top: 6px; font-size: 28px; line-height: 1; }
+
+    .content-layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-header h2 { margin: 0; font-size: 17px; }
+    .search-row { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+
+    .field { display: grid; gap: 6px; }
+    label { color: var(--muted); font-size: 13px; font-weight: 600; }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 40px;
+      padding: 9px 11px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    textarea { min-height: 96px; resize: vertical; }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(18, 106, 114, 0.13);
+    }
+
+    .client-list { max-height: calc(100vh - 295px); overflow: auto; }
+
+    .client-item {
+      width: 100%;
+      display: grid;
+      gap: 9px;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      background: white;
+    }
+
+    .client-item.active {
+      background: var(--soft);
+      box-shadow: inset 3px 0 0 var(--brand);
+    }
+
+    .client-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .client-title strong { min-width: 0; overflow-wrap: anywhere; }
+
+    .client-meta {
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 99px;
+      background: #e5ebf0;
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      background: var(--brand);
+      width: 0;
+      transition: width .2s ease;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #edf2f5;
+      color: #465463;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.ok { background: #e6f5ed; color: var(--ok); }
+    .badge.warn { background: #fff2dc; color: var(--warn); }
+    .badge.danger { background: #fdecea; color: var(--danger); }
+
+    .detail-empty {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+    }
+
+    .detail-body { display: grid; gap: 16px; padding: 16px; }
+
+    .client-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .client-head h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .contact-lines { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--muted); }
+    .balance-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+    .balance-box {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+    }
+
+    .balance-box span { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .balance-box strong { display: block; margin-top: 4px; font-size: 24px; line-height: 1; }
+
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; background: #fff; }
+
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f7f9fb;
+      color: #526071;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    td.description { max-width: 360px; overflow-wrap: anywhere; }
+    tr:last-child td { border-bottom: 0; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-grid .span-2 { grid-column: 1 / -1; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 20, 31, 0.48);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 20;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: min(760px, 100%);
+      max-height: min(760px, calc(100vh - 36px));
+      overflow: auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 28px 80px rgba(0,0,0,0.24);
+    }
+
+    .modal form { padding: 16px; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+
+    .report-panel { display: none; }
+    .report-panel.active { display: block; }
+    .report-list { display: grid; gap: 12px; padding: 16px; }
+
+    .report-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      max-width: min(420px, calc(100vw - 32px));
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #111923;
+      color: #fff;
+      box-shadow: var(--shadow);
+      display: none;
+      z-index: 30;
+    }
+
+    .toast.open { display: block; }
+    .muted { color: var(--muted); }
+    .hidden { display: none !important; }
+
+    @media (max-width: 1020px) {
+      .app-shell { grid-template-columns: 1fr; }
+      aside { position: sticky; top: 0; z-index: 10; padding: 12px; }
+      .brand { padding-bottom: 10px; }
+      nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .side-summary { display: none; }
+      .content-layout { grid-template-columns: 1fr; }
+      .client-list { max-height: none; }
+    }
+
+    @media (max-width: 760px) {
+      main { padding: 18px 12px; }
+      .topbar { align-items: stretch; flex-direction: column; }
+      .actions { justify-content: stretch; }
+      .btn { flex: 1 1 auto; }
+      .stats, .balance-strip, .form-grid { grid-template-columns: 1fr; }
+      .form-grid .span-2 { grid-column: auto; }
+      .client-head { grid-template-columns: 1fr; }
+      .report-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside>
+      <div class="brand">
+        <div class="brand-mark">M</div>
+        <div>
+          <strong>Mouragrid</strong>
+          <span>Contratos online</span>
+        </div>
+      </div>
+      <nav aria-label="Navegação">
+        <button class="nav-button active" data-view="dashboard" type="button">Clientes</button>
+        <button class="nav-button" data-view="reports" type="button">Relatórios</button>
+      </nav>
+      <div class="side-summary">
+        <span>Saldo total disponível</span>
+        <strong id="sideBalance">0h</strong>
+      </div>
+    </aside>
+
+    <main>
+      <section id="dashboardView">
+        <div class="topbar">
+          <div>
+            <h1>Controle online de horas contratadas</h1>
+            <p class="subtitle">Os dados ficam no servidor central. Consultores em outras cidades podem registrar atendimentos e o saldo será atualizado para todos.</p>
+          </div>
+          <div class="actions">
+            <span class="sync-pill" id="syncStatus"><span class="sync-dot"></span><span id="syncText">Sincronizado</span></span>
+            <button class="btn" id="exportBtn" type="button" title="Exportar atendimentos em CSV">Exportar</button>
+            <button class="btn primary" id="newClientBtn" type="button">Novo cliente</button>
+          </div>
+        </div>
+
+        <div class="grid stats">
+          <div class="stat"><span>Clientes ativos</span><strong id="statClients">0</strong></div>
+          <div class="stat"><span>Horas contratadas</span><strong id="statContracted">0h</strong></div>
+          <div class="stat"><span>Horas usadas</span><strong id="statUsed">0h</strong></div>
+          <div class="stat"><span>Saldo restante</span><strong id="statRemaining">0h</strong></div>
+        </div>
+
+        <div class="content-layout">
+          <section class="panel" aria-label="Lista de clientes">
+            <div class="panel-header">
+              <h2>Clientes</h2>
+              <span class="badge" id="clientCount">0</span>
+            </div>
+            <div class="search-row">
+              <label class="field">
+                Buscar cliente
+                <input id="clientSearch" type="search" placeholder="Nome, contato ou e-mail">
+              </label>
+            </div>
+            <div class="client-list" id="clientList"></div>
+          </section>
+
+          <section class="panel" aria-label="Detalhes do cliente">
+            <div id="emptyState" class="detail-empty">
+              <div>
+                <h2>Nenhum cliente selecionado</h2>
+                <p>Cadastre ou selecione um cliente para registrar atendimentos e controlar o saldo de horas.</p>
+              </div>
+            </div>
+            <div id="detailState" class="detail-body hidden"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="reportsView" class="report-panel">
+        <div class="topbar">
+          <div>
+            <h1>Relatórios</h1>
+            <p class="subtitle">Visão rápida dos contratos, consumo e clientes próximos de esgotar o saldo.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="backToClientsBtn" type="button">Clientes</button>
+          </div>
+        </div>
+        <div class="grid stats">
+          <div class="stat"><span>Maior saldo</span><strong id="reportTopBalance">0h</strong></div>
+          <div class="stat"><span>Maior consumo</span><strong id="reportTopUsage">0h</strong></div>
+          <div class="stat"><span>Sem saldo</span><strong id="reportNoBalance">0</strong></div>
+          <div class="stat"><span>Atendimentos</span><strong id="reportTickets">0</strong></div>
+        </div>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Resumo por cliente</h2>
+          </div>
+          <div class="report-list" id="reportList"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="clientModal" role="dialog" aria-modal="true" aria-labelledby="clientModalTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <h2 id="clientModalTitle">Novo cliente</h2>
+        <button class="btn icon" type="button" data-close="clientModal" title="Fechar">x</button>
+      </div>
+      <form id="clientForm">
+        <input type="hidden" id="clientId">
+        <div class="form-grid">
+          <label class="field">Nome do cliente<input id="clientName" required placeholder="Ex.: Empresa Alpha"></label>
+          <label class="field">Horas contratadas<input id="clientHours" type="number" min="0" step="0.25" required placeholder="Ex.: 40"></label>
+          <label class="field">Nome do contato<input id="contactName" required placeholder="Ex.: Maria Silva"></label>
+          <label class="field">E-mail do contato<input id="contactEmail" type="email" placeholder="contato@empresa.com"></label>
+          <label class="field">Telefone<input id="contactPhone" placeholder="(00) 00000-0000"></label>
+          <label class="field">
+            Tipo de contrato
+            <select id="contractType">
+              <option>Suporte</option>
+              <option>Consultoria</option>
+              <option>Suporte e consultoria</option>
+            </select>
+          </label>
+          <label class="field span-2">Observações<textarea id="clientNotes" placeholder="Informações relevantes sobre SLA, escopo ou combinados do contrato"></textarea></label>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn" type="button" data-close="clientModal">Cancelar</button>
+        <button class="btn primary" form="clientForm" type="submit">Salvar cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="serviceModal" role="dialog" aria-modal="true" aria-labelledby="serviceModalTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <h2 id="serviceModalTitle">Novo atendimento</h2>
+        <button class="btn icon" type="button" data-close="serviceModal" title="Fechar">x</button>
+      </div>
+      <form id="serviceForm">
+        <input type="hidden" id="serviceClientId">
+        <input type="hidden" id="serviceId">
+        <div class="form-grid">
+          <label class="field">Data<input id="serviceDate" type="date" required></label>
+          <label class="field">Horas usufruídas<input id="serviceHours" type="number" min="0.25" step="0.25" required placeholder="Ex.: 1.5"></label>
+          <label class="field">Responsável Mouragrid<input id="serviceAgent" placeholder="Quem realizou o atendimento"></label>
+          <label class="field">
+            Categoria
+            <select id="serviceCategory">
+              <option>Suporte</option>
+              <option>Consultoria</option>
+              <option>Reunião</option>
+              <option>Implantação</option>
+              <option>Treinamento</option>
+            </select>
+          </label>
+          <label class="field span-2">Descritivo do atendimento<textarea id="serviceDescription" required placeholder="Descreva o que foi solicitado, executado e combinado com o cliente"></textarea></label>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn" type="button" data-close="serviceModal">Cancelar</button>
+        <button class="btn primary" form="serviceForm" type="submit">Salvar atendimento</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+  <script src="./supabase-adapter.js"></script>
+  <script>
+    let appPin = sessionStorage.getItem('mouragrid-pin') || '';
+    let state = { clients: [], selectedClientId: null, updatedAt: '' };
+    let saving = false;
+    let lastServerUpdate = '';
+
+    const elements = {
+      sideBalance: document.querySelector('#sideBalance'),
+      statClients: document.querySelector('#statClients'),
+      statContracted: document.querySelector('#statContracted'),
+      statUsed: document.querySelector('#statUsed'),
+      statRemaining: document.querySelector('#statRemaining'),
+      clientCount: document.querySelector('#clientCount'),
+      clientList: document.querySelector('#clientList'),
+      clientSearch: document.querySelector('#clientSearch'),
+      emptyState: document.querySelector('#emptyState'),
+      detailState: document.querySelector('#detailState'),
+      dashboardView: document.querySelector('#dashboardView'),
+      reportsView: document.querySelector('#reportsView'),
+      reportList: document.querySelector('#reportList'),
+      syncStatus: document.querySelector('#syncStatus'),
+      syncText: document.querySelector('#syncText'),
+      toast: document.querySelector('#toast')
+    };
+
+    document.querySelector('#newClientBtn').addEventListener('click', () => openClientModal());
+    document.querySelector('#exportBtn').addEventListener('click', exportCsv);
+    document.querySelector('#backToClientsBtn').addEventListener('click', () => showView('dashboard'));
+    document.querySelector('#clientSearch').addEventListener('input', render);
+    document.querySelector('#clientForm').addEventListener('submit', saveClient);
+    document.querySelector('#serviceForm').addEventListener('submit', saveService);
+
+    document.querySelectorAll('[data-close]').forEach(button => {
+      button.addEventListener('click', () => closeModal(button.dataset.close));
+    });
+
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', event => {
+        if (event.target === backdrop) closeModal(backdrop.id);
+      });
+    });
+
+    document.querySelectorAll('.nav-button').forEach(button => {
+      button.addEventListener('click', () => showView(button.dataset.view));
+    });
+
+    loadFromServer();
+    setInterval(loadFromServer, 5000);
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-pin': appPin,
+          ...(options.headers || {})
+        }
+      });
+
+      if (response.status === 401) {
+        appPin = prompt('Digite o PIN de acesso do aplicativo Mouragrid:') || '';
+        sessionStorage.setItem('mouragrid-pin', appPin);
+        return api(path, options);
+      }
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Falha na comunicação com o servidor.');
+      }
+
+      return response.json();
+    }
+
+    async function loadFromServer() {
+      if (saving) return;
+      try {
+        const serverState = await api('/api/state');
+        if (serverState.updatedAt !== lastServerUpdate) {
+          const currentSelectedClientId = state.selectedClientId;
+          const selectedStillExists = serverState.clients?.some(client => client.id === currentSelectedClientId);
+          state = serverState;
+          if (selectedStillExists) state.selectedClientId = currentSelectedClientId;
+          else if (state.clients[0]) state.selectedClientId = state.clients[0].id;
+          lastServerUpdate = serverState.updatedAt;
+          render();
+        }
+        setSync('Sincronizado', false);
+      } catch (error) {
+        setSync('Sem conexão', true);
+        showToast(error.message);
+      }
+    }
+
+    async function saveToServer() {
+      saving = true;
+      setSync('Salvando...', false);
+      try {
+        const saved = await api('/api/state', {
+          method: 'POST',
+          body: JSON.stringify(state)
+        });
+        state = saved;
+        lastServerUpdate = saved.updatedAt;
+        render();
+        setSync('Sincronizado', false);
+      } catch (error) {
+        setSync('Erro ao salvar', true);
+        showToast(error.message);
+      } finally {
+        saving = false;
+      }
+    }
+
+    function setSync(text, isError) {
+      elements.syncText.textContent = text;
+      elements.syncStatus.classList.toggle('error', isError);
+    }
+
+    function render() {
+      renderStats();
+      renderClients();
+      renderDetail();
+      renderReports();
+    }
+
+    function totals() {
+      const contracted = state.clients.reduce((sum, client) => sum + Number(client.hours || 0), 0);
+      const used = state.clients.reduce((sum, client) => sum + usedHours(client), 0);
+      return { contracted, used, remaining: contracted - used };
+    }
+
+    function usedHours(client) {
+      return (client.services || []).reduce((sum, service) => sum + Number(service.hours || 0), 0);
+    }
+
+    function remainingHours(client) {
+      return Number(client.hours || 0) - usedHours(client);
+    }
+
+    function renderStats() {
+      const total = totals();
+      elements.statClients.textContent = state.clients.length;
+      elements.statContracted.textContent = formatHours(total.contracted);
+      elements.statUsed.textContent = formatHours(total.used);
+      elements.statRemaining.textContent = formatHours(total.remaining);
+      elements.sideBalance.textContent = formatHours(total.remaining);
+      elements.clientCount.textContent = state.clients.length;
+    }
+
+    function renderClients() {
+      const query = elements.clientSearch.value.trim().toLowerCase();
+      const clients = state.clients.filter(client => {
+        const content = [client.name, client.contactName, client.contactEmail, client.contactPhone].join(' ').toLowerCase();
+        return content.includes(query);
+      });
+
+      if (!clients.length) {
+        elements.clientList.innerHTML = '<div class="detail-empty"><p>Nenhum cliente encontrado.</p></div>';
+        return;
+      }
+
+      elements.clientList.innerHTML = clients.map(client => {
+        const used = usedHours(client);
+        const remaining = remainingHours(client);
+        const percent = client.hours > 0 ? Math.min(100, (used / client.hours) * 100) : 0;
+        const badgeClass = remaining <= 0 ? 'danger' : remaining <= client.hours * 0.2 ? 'warn' : 'ok';
+        return `
+          <button class="client-item ${client.id === state.selectedClientId ? 'active' : ''}" type="button" data-client="${client.id}">
+            <div class="client-title">
+              <strong>${escapeHtml(client.name)}</strong>
+              <span class="badge ${badgeClass}">${formatHours(remaining)}</span>
+            </div>
+            <div class="client-meta">
+              <span>${escapeHtml(client.contactName || 'Sem contato')}</span>
+              <span>${escapeHtml(client.contractType || 'Contrato')}</span>
+            </div>
+            <div class="progress" aria-label="Consumo de horas"><span style="width:${percent}%"></span></div>
+            <div class="client-meta">
+              <span>${formatHours(used)} usadas</span>
+              <span>${formatHours(client.hours || 0)} contratadas</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      elements.clientList.querySelectorAll('[data-client]').forEach(button => {
+        button.addEventListener('click', () => {
+          state.selectedClientId = button.dataset.client;
+          render();
+        });
+      });
+    }
+
+    function renderDetail() {
+      const client = getSelectedClient();
+      if (!client) {
+        elements.emptyState.classList.remove('hidden');
+        elements.detailState.classList.add('hidden');
+        elements.detailState.innerHTML = '';
+        return;
+      }
+
+      elements.emptyState.classList.add('hidden');
+      elements.detailState.classList.remove('hidden');
+
+      const used = usedHours(client);
+      const remaining = remainingHours(client);
+      const services = [...(client.services || [])].sort((a, b) => b.date.localeCompare(a.date));
+
+      elements.detailState.innerHTML = `
+        <div class="client-head">
+          <div>
+            <h2>${escapeHtml(client.name)}</h2>
+            <div class="contact-lines">
+              <span>${escapeHtml(client.contactName || 'Sem contato')}</span>
+              <span>${escapeHtml(client.contactEmail || 'Sem e-mail')}</span>
+              <span>${escapeHtml(client.contactPhone || 'Sem telefone')}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" type="button" id="editClientBtn">Editar</button>
+            <button class="btn primary" type="button" id="newServiceBtn">Atendimento</button>
+          </div>
+        </div>
+
+        <div class="balance-strip">
+          <div class="balance-box"><span>Contratadas</span><strong>${formatHours(client.hours || 0)}</strong></div>
+          <div class="balance-box"><span>Usadas</span><strong>${formatHours(used)}</strong></div>
+          <div class="balance-box"><span>Saldo</span><strong>${formatHours(remaining)}</strong></div>
+        </div>
+
+        ${client.notes ? `<p class="muted">${escapeHtml(client.notes)}</p>` : ''}
+
+        <div class="panel-header" style="padding-left:0;padding-right:0;border-bottom:0;">
+          <h2>Atendimentos</h2>
+          <span class="badge">${services.length}</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Categoria</th>
+                <th>Responsável</th>
+                <th>Descritivo</th>
+                <th>Horas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${services.length ? services.map(service => `
+                <tr>
+                  <td>${formatDate(service.date)}</td>
+                  <td>${escapeHtml(service.category || '-')}</td>
+                  <td>${escapeHtml(service.agent || '-')}</td>
+                  <td class="description">${escapeHtml(service.description || '-')}</td>
+                  <td><strong>${formatHours(service.hours)}</strong></td>
+                  <td><button class="btn icon" type="button" data-edit-service="${service.id}" title="Editar atendimento">E</button></td>
+                </tr>
+              `).join('') : '<tr><td colspan="6" class="muted">Nenhum atendimento registrado para este cliente.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      document.querySelector('#editClientBtn').addEventListener('click', () => openClientModal(client));
+      document.querySelector('#newServiceBtn').addEventListener('click', () => openServiceModal(client.id));
+      elements.detailState.querySelectorAll('[data-edit-service]').forEach(button => {
+        button.addEventListener('click', () => openServiceModal(client.id, button.dataset.editService));
+      });
+    }
+
+    function renderReports() {
+      const sorted = [...state.clients].sort((a, b) => remainingHours(b) - remainingHours(a));
+      const mostBalance = sorted[0] ? remainingHours(sorted[0]) : 0;
+      const mostUsage = state.clients.reduce((max, client) => Math.max(max, usedHours(client)), 0);
+      const noBalance = state.clients.filter(client => remainingHours(client) <= 0).length;
+      const tickets = state.clients.reduce((sum, client) => sum + (client.services || []).length, 0);
+
+      document.querySelector('#reportTopBalance').textContent = formatHours(mostBalance);
+      document.querySelector('#reportTopUsage').textContent = formatHours(mostUsage);
+      document.querySelector('#reportNoBalance').textContent = noBalance;
+      document.querySelector('#reportTickets').textContent = tickets;
+
+      elements.reportList.innerHTML = state.clients.length ? sorted.map(client => {
+        const used = usedHours(client);
+        const remaining = remainingHours(client);
+        return `
+          <div class="report-row">
+            <div>
+              <strong>${escapeHtml(client.name)}</strong>
+              <div class="muted">${formatHours(client.hours)} contratadas - ${formatHours(used)} usadas - ${client.services?.length || 0} atendimentos</div>
+            </div>
+            <span class="badge ${remaining <= 0 ? 'danger' : remaining <= client.hours * 0.2 ? 'warn' : 'ok'}">${formatHours(remaining)}</span>
+          </div>
+        `;
+      }).join('') : '<p class="muted">Nenhum cliente cadastrado.</p>';
+    }
+
+    function openClientModal(client = null) {
+      document.querySelector('#clientModalTitle').textContent = client ? 'Editar cliente' : 'Novo cliente';
+      document.querySelector('#clientId').value = client?.id || '';
+      document.querySelector('#clientName').value = client?.name || '';
+      document.querySelector('#clientHours').value = client?.hours ?? '';
+      document.querySelector('#contactName').value = client?.contactName || '';
+      document.querySelector('#contactEmail').value = client?.contactEmail || '';
+      document.querySelector('#contactPhone').value = client?.contactPhone || '';
+      document.querySelector('#contractType').value = client?.contractType || 'Suporte';
+      document.querySelector('#clientNotes').value = client?.notes || '';
+      openModal('clientModal');
+      document.querySelector('#clientName').focus();
+    }
+
+    async function saveClient(event) {
+      event.preventDefault();
+      const id = document.querySelector('#clientId').value || crypto.randomUUID();
+      const existing = state.clients.find(client => client.id === id);
+      const payload = {
+        id,
+        name: document.querySelector('#clientName').value.trim(),
+        hours: Number(document.querySelector('#clientHours').value || 0),
+        contactName: document.querySelector('#contactName').value.trim(),
+        contactEmail: document.querySelector('#contactEmail').value.trim(),
+        contactPhone: document.querySelector('#contactPhone').value.trim(),
+        contractType: document.querySelector('#contractType').value,
+        notes: document.querySelector('#clientNotes').value.trim(),
+        services: existing?.services || []
+      };
+
+      if (existing) Object.assign(existing, payload);
+      else {
+        state.clients.push(payload);
+        state.selectedClientId = id;
+      }
+
+      closeModal('clientModal');
+      render();
+      await saveToServer();
+    }
+
+    function openServiceModal(clientId, serviceId = null) {
+      const client = state.clients.find(item => item.id === clientId);
+      const service = client?.services?.find(item => item.id === serviceId);
+      document.querySelector('#serviceModalTitle').textContent = service ? 'Editar atendimento' : 'Novo atendimento';
+      document.querySelector('#serviceClientId').value = clientId;
+      document.querySelector('#serviceId').value = service?.id || '';
+      document.querySelector('#serviceDate').value = service?.date || new Date().toISOString().slice(0, 10);
+      document.querySelector('#serviceHours').value = service?.hours ?? '';
+      document.querySelector('#serviceAgent').value = service?.agent || '';
+      document.querySelector('#serviceCategory').value = service?.category || 'Suporte';
+      document.querySelector('#serviceDescription').value = service?.description || '';
+      openModal('serviceModal');
+      document.querySelector('#serviceDescription').focus();
+    }
+
+    async function saveService(event) {
+      event.preventDefault();
+      const client = state.clients.find(item => item.id === document.querySelector('#serviceClientId').value);
+      if (!client) return;
+
+      const id = document.querySelector('#serviceId').value || crypto.randomUUID();
+      const existing = (client.services || []).find(service => service.id === id);
+      const payload = {
+        id,
+        date: document.querySelector('#serviceDate').value,
+        hours: Number(document.querySelector('#serviceHours').value || 0),
+        agent: document.querySelector('#serviceAgent').value.trim(),
+        category: document.querySelector('#serviceCategory').value,
+        description: document.querySelector('#serviceDescription').value.trim()
+      };
+
+      client.services = client.services || [];
+      if (existing) Object.assign(existing, payload);
+      else client.services.push(payload);
+
+      closeModal('serviceModal');
+      render();
+      await saveToServer();
+    }
+
+    function showView(view) {
+      const isReports = view === 'reports';
+      elements.dashboardView.classList.toggle('hidden', isReports);
+      elements.reportsView.classList.toggle('active', isReports);
+      document.querySelectorAll('.nav-button').forEach(button => {
+        button.classList.toggle('active', button.dataset.view === view);
+      });
+      renderReports();
+    }
+
+    function openModal(id) { document.querySelector(`#${id}`).classList.add('open'); }
+    function closeModal(id) { document.querySelector(`#${id}`).classList.remove('open'); }
+
+    function getSelectedClient() {
+      return state.clients.find(client => client.id === state.selectedClientId) || null;
+    }
+
+    function formatHours(value) {
+      const number = Number(value || 0);
+      return `${number.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}h`;
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      const [year, month, day] = value.split('-');
+      return `${day}/${month}/${year}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function showToast(message) {
+      elements.toast.textContent = message;
+      elements.toast.classList.add('open');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => elements.toast.classList.remove('open'), 3500);
+    }
+
+    function exportCsv() {
+      const rows = [['Cliente', 'Contato', 'Email', 'Telefone', 'Contrato', 'Data', 'Categoria', 'Responsavel', 'Descricao', 'Horas usadas', 'Horas contratadas', 'Saldo atual']];
+      state.clients.forEach(client => {
+        const services = client.services?.length ? client.services : [{ date: '', category: '', agent: '', description: '', hours: 0 }];
+        services.forEach(service => {
+          rows.push([client.name, client.contactName, client.contactEmail, client.contactPhone, client.contractType, service.date, service.category, service.agent, service.description, service.hours, client.hours, remainingHours(client)]);
+        });
+      });
+
+      const csv = rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(';')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mouragrid-atendimentos-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

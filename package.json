@@ -1,0 +1,13 @@
+{
+  "name": "mouragrid-controle-horas-online",
+  "version": "1.0.0",
+  "description": "Aplicativo online para controle de horas contratadas de suporte e consultoria da Mouragrid.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}
